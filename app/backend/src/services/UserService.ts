@@ -3,7 +3,7 @@ import { ServiceMessage, ServiceResponse } from '../Interfaces/ServiceResponse';
 import { IUserModel } from '../Interfaces/users/IUserModel';
 import UserModel from '../models/UserModel';
 import { ILogin, IUser } from '../Interfaces/users/IUser';
-import { IToken } from '../Interfaces/IToken';
+import { IToken } from '../Interfaces/login/IToken';
 import JWT from '../utils/JWT';
 
 export default class UserService {
@@ -16,13 +16,22 @@ export default class UserService {
     const user = await this.userModel.findByEmail(data.email);
     if (user) {
       if (!bcrypt.compareSync(data.password, user.password)) {
-        return { status: 'INVALID_DATA', data: { message: 'Invalid email or password' } };
+        return { status: 'UNAUTHORIZED', data: { message: 'Invalid email or password' } };
       }
       const { email } = user as IUser;
       const token = this.jwtService.sign({ email });
       return { status: 'SUCCESSFUL', data: { token } };
     }
-    return { status: 'NOT_FOUND', data: { message: 'User not found' } };
+    return { status: 'UNAUTHORIZED', data: { message: 'Invalid email or password' } };
+  }
+
+  public async getUserByEmail(email: string): Promise<ServiceResponse<ServiceMessage | IUser>> {
+    const user = await this.userModel.findByEmail(email);
+    if (!user) {
+      return { status: 'NOT_FOUND', data: { message: 'User not found' } };
+    }
+
+    return { status: 'SUCCESSFUL', data: user };
   }
 
   // public async getAllTeams(): Promise<ServiceResponse<ITeam[]>> {

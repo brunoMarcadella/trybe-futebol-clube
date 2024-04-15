@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import { IRequestUser, IUser } from '../Interfaces/users/IUser';
 import mapStatusHTTP from '../utils/mapStatusHTTP';
 import UserService from '../services/UserService';
 
@@ -7,7 +8,7 @@ export default class UserController {
     private userService = new UserService(),
   ) { }
 
-  public async login(req: Request, res: Response) {
+  public async login(req: Request, res: Response): Promise<Response> {
     const serviceResponse = await this.userService.login(req.body);
 
     if (serviceResponse.status !== 'SUCCESSFUL') {
@@ -15,6 +16,18 @@ export default class UserController {
     }
 
     return res.status(200).json(serviceResponse.data);
+  }
+
+  public async getUserRole(req: IRequestUser, res: Response): Promise<Response> {
+    const { email } = req;
+    const serviceResponse = await this.userService.getUserByEmail(email as unknown as string);
+
+    if (serviceResponse.status !== 'SUCCESSFUL') {
+      return res.status(mapStatusHTTP(serviceResponse.status)).json(serviceResponse.data);
+    }
+
+    const userData = serviceResponse.data as IUser;
+    return res.status(200).json({ role: userData.role });
   }
 
   // public async getAllTeams(_req: Request, res: Response) {
