@@ -7,9 +7,21 @@ export default class MatchController {
     private matchService = new MatchService(),
   ) { }
 
-  public async getAllMatches(_req: Request, res: Response) {
-    const serviceResponse = await this.matchService.getAllMatches();
-    res.status(200).json(serviceResponse.data);
+  public async getAllMatches(req: Request, res: Response) {
+    const { inProgress } = req.query;
+    if (inProgress !== undefined) {
+      let booleanValue: boolean;
+      if (inProgress === 'true') {
+        booleanValue = true;
+      } else {
+        booleanValue = false;
+      }
+      const serviceResponse = await this.matchService.getAllMatchesByFilter(booleanValue);
+      res.status(200).json(serviceResponse.data);
+    } else {
+      const serviceResponse = await this.matchService.getAllMatches();
+      res.status(200).json(serviceResponse.data);
+    }
   }
 
   public async getMatchById(req: Request, res: Response) {

@@ -18,4 +18,11 @@ export default class MatchService {
     if (!match) return { status: 'NOT_FOUND', data: { message: `Match ${id} not found` } };
     return { status: 'SUCCESSFUL', data: match };
   }
+
+  public async getAllMatchesByFilter(inProgress: boolean):
+  Promise<ServiceResponse<IMatch[]>> {
+    const allMatches = await this.matchModel.findAllByFilter(inProgress);
+
+    return { status: 'SUCCESSFUL', data: allMatches };
+  }
 }
