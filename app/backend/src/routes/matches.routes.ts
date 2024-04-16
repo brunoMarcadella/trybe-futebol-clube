@@ -14,7 +14,7 @@ router.patch(
 );
 router.patch(
   '/:id',
-  // Validations.validateToken,
+  Validations.validateToken,
   (req: Request, res: Response) => matchController.updateMatchGoals(req, res),
 );
 
