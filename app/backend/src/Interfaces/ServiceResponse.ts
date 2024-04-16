@@ -5,7 +5,8 @@ type ServiceResponseErrorType =
 'UNAUTHORIZED' |
 'NOT_FOUND' |
 'CONFLICT' |
-'UNPROCESSABLE_ENTITY';
+'UNPROCESSABLE_ENTITY' |
+'INTERNAL_SERVER_ERROR';
 
 export type ServiceResponseError = {
   status: ServiceResponseErrorType,
