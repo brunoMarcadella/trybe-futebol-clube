@@ -77,8 +77,28 @@ const finishedMatches = [
   }
 ]
 
+const unfinishedMatch = {
+  id: 1,
+  homeTeamId: 16,
+  homeTeamGoals: 1,
+  awayTeamId: 8,
+  awayTeamGoals: 1,
+  inProgress: true,
+}
+
+const finishedMatch = {
+  id: 1,
+  homeTeamId: 16,
+  homeTeamGoals: 1,
+  awayTeamId: 8,
+  awayTeamGoals: 1,
+  inProgress: false,
+}
+
 export {
   matches,
   unfinishedMatches,
   finishedMatches,
+  unfinishedMatch,
+  finishedMatch,
 }

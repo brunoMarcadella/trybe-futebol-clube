@@ -60,6 +60,7 @@ export default class MatchController {
 
   public async createMatch(req: Request, res: Response) {
     const data = req.body;
+
     const serviceResponse = await this.matchService.createMatch(data);
 
     if (serviceResponse.status !== 'SUCCESSFUL') {

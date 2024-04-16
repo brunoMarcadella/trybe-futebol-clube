@@ -7,6 +7,7 @@ import { app } from '../app';
 
 import SequelizeMatch from '../database/models/SequelizeMatch';
 import { finishedMatches, matches, unfinishedMatches } from './mocks/Match.mocks';
+import JWT from '../utils/JWT';
 
 chai.use(chaiHttp);
 
@@ -35,6 +36,20 @@ describe('Match Test', function() {
   });
 
   it('should return only finished matches', async function() {
+    sinon.stub(SequelizeMatch, 'findAll').resolves(finishedMatches as any);
+
+    const { status, body } = await chai.request(app)
+      .get('/matches')
+      .query({ inProgress: false })
+      .send();
+
+    expect(status).to.equal(200);
+    expect(body).to.deep.equal(finishedMatches);
+  });
+
+  it('should return a message after finish a match', async function() {
+    sinon.stub(JWT, 'verify').returns();
+    sinon.stub(SequelizeUser, 'findOne').resolves(userRegistered as any);
     sinon.stub(SequelizeMatch, 'findAll').resolves(finishedMatches as any);
 
     const { status, body } = await chai.request(app)
