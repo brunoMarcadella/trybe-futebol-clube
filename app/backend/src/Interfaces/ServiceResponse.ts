@@ -12,9 +12,4 @@ export type ServiceResponseSuccess<T> = {
   data: T
 };
 
-// export type ServiceResponseSuccessRole = {
-//   status: 'SUCCESSFUL',
-//   data: T
-// }
-
 export type ServiceResponse<T> = ServiceResponseError | ServiceResponseSuccess<T>;

@@ -6,7 +6,7 @@ import chaiHttp = require('chai-http');
 import { app } from '../app';
 
 import SequelizeMatch from '../database/models/SequelizeMatch';
-import { matches } from './mocks/Match.mocks';
+import { finishedMatches, matches, unfinishedMatches } from './mocks/Match.mocks';
 
 chai.use(chaiHttp);
 
@@ -21,6 +21,31 @@ describe('Match Test', function() {
     expect(status).to.equal(200);
     expect(body).to.deep.equal(matches);
   });
+
+  it('should return only unfinished matches', async function() {
+    sinon.stub(SequelizeMatch, 'findAll').resolves(unfinishedMatches as any);
+
+    const { status, body } = await chai.request(app)
+      .get('/matches')
+      .query({ inProgress: true })
+      .send();
+
+    expect(status).to.equal(200);
+    expect(body).to.deep.equal(unfinishedMatches);
+  });
+
+  it('should return only finished matches', async function() {
+    sinon.stub(SequelizeMatch, 'findAll').resolves(finishedMatches as any);
+
+    const { status, body } = await chai.request(app)
+      .get('/matches')
+      .query({ inProgress: false })
+      .send();
+
+    expect(status).to.equal(200);
+    expect(body).to.deep.equal(finishedMatches);
+  });
+
 
   // it('should return a team by id', async function() {
   //   sinon.stub(SequelizeTeam, 'findOne').resolves(team as any);

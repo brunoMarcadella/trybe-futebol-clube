@@ -34,4 +34,27 @@ export default class MatchController {
 
     return res.status(200).json(serviceResponse.data);
   }
+
+  public async finishMatch(req: Request, res: Response) {
+    const { id } = req.params;
+    const serviceResponse = await this.matchService.finishMatch(Number(id));
+
+    if (serviceResponse.status !== 'SUCCESSFUL') {
+      return res.status(mapStatusHTTP(serviceResponse.status)).json(serviceResponse.data);
+    }
+
+    return res.status(200).json(serviceResponse.data);
+  }
+
+  public async updateMatchGoals(req: Request, res: Response) {
+    const { id } = req.params;
+    const data = req.body;
+    const serviceResponse = await this.matchService.updateMatchGoals(Number(id), data);
+
+    if (serviceResponse.status !== 'SUCCESSFUL') {
+      return res.status(mapStatusHTTP(serviceResponse.status)).json(serviceResponse.data);
+    }
+
+    return res.status(200).json(serviceResponse.data);
+  }
 }
