@@ -3,7 +3,7 @@ import { ILeaderboard } from '../Interfaces/leaderboard/ILeaderboard';
 import TeamService from '../services/TeamService';
 import MatchService from '../services/MatchService';
 
-export default class LeaderboardController {
+export default class LeaderboardHomeController {
   constructor(
     private matchService = new MatchService(),
     private teamService = new TeamService(),
@@ -18,7 +18,7 @@ export default class LeaderboardController {
           ...await this.getHomeTeamStats(team.id),
         })),
       );
-      const newLeaderboard = LeaderboardController
+      const newLeaderboard = LeaderboardHomeController
         .sortLeaderboard(leaderboardData as ILeaderboard[]);
       res.status(200).json(newLeaderboard);
     }
@@ -28,7 +28,7 @@ export default class LeaderboardController {
 
   public async getHomeTeamStats(teamId: number) {
     const stats = {
-      totalPoints: await this.getTotalPointsInHome(teamId),
+      totalPoints: await this.getTotalHomePoints(teamId),
       totalGames: await this.getTotalHomeGames(teamId),
       totalVictories: await this.getTotalHomeVictories(teamId),
       totalDraws: await this.getTotalHomeDraws(teamId),
@@ -45,15 +45,15 @@ export default class LeaderboardController {
   static sortLeaderboard(leaderboard: ILeaderboard[]) {
     const newLeaderboard = leaderboard.sort((a, b) => {
       if (a.totalPoints !== b.totalPoints) {
-        return LeaderboardController.sortByPoints(a, b);
+        return LeaderboardHomeController.sortByPoints(a, b);
       }
       if (a.totalVictories !== b.totalVictories) {
-        return LeaderboardController.sortByVictories(a, b);
+        return LeaderboardHomeController.sortByVictories(a, b);
       }
       if (a.goalsFavor - a.goalsOwn !== b.goalsFavor - b.goalsOwn) {
-        return LeaderboardController.sortByGoalsBalance(a, b);
+        return LeaderboardHomeController.sortByGoalsBalance(a, b);
       }
-      return LeaderboardController.sortByScoredGoals(a, b);
+      return LeaderboardHomeController.sortByScoredGoals(a, b);
     });
 
     return newLeaderboard;
@@ -103,7 +103,7 @@ export default class LeaderboardController {
     return 0;
   }
 
-  public async getTotalPointsInHome(teamId: number) {
+  public async getTotalHomePoints(teamId: number) {
     const finishedMatches = await this.matchService.getAllMatchesByFilter(false);
     if (finishedMatches.status === 'SUCCESSFUL') {
       let acc = 0;
@@ -237,7 +237,7 @@ export default class LeaderboardController {
   }
 
   public async getTeamHomeEfficiency(teamId: number) {
-    const totalPoints = await this.getTotalPointsInHome(teamId) ?? 0;
+    const totalPoints = await this.getTotalHomePoints(teamId) ?? 0;
     const totalGames = await this.getTotalHomeGames(teamId) ?? 0;
 
     const efficiency = (totalPoints / (totalGames * 3)) * 100;
