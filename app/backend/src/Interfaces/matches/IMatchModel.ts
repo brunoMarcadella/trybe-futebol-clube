@@ -10,4 +10,5 @@ export interface IMatchModel extends ICRUDModelReader<IMatch> {
   findAllByFilter(inProgress: boolean): Promise<IMatch[]>,
   finishMatch(id: number): Promise<void>,
   updateMatchGoals(id: number, goals: GoalsType): Promise<void>,
+  createMatch(data: Omit<IMatch, 'id'>): Promise<IMatch>,
 }

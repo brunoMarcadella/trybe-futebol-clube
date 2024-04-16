@@ -57,4 +57,9 @@ export default class MatchModel implements IMatchModel {
   async updateMatchGoals(id: number, goals: GoalsType): Promise<void> {
     await this.model.update(goals, { where: { id } });
   }
+
+  async createMatch(data: Omit<IMatch, 'id'>): Promise<IMatch> {
+    const newMatch = await this.model.create({ ...data, inProgress: true });
+    return newMatch;
+  }
 }
