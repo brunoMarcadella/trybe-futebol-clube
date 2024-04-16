@@ -29,15 +29,17 @@ export default class LeaderboardController {
   }
 
   public async getTeamStats(teamId: number) {
+    const homeStats = await this.leaderboardHomeController.getHomeTeamStats(teamId);
+    const awayStats = await this.leaderboardAwayController.getAwayTeamStats(teamId);
     const stats = {
-      totalPoints: await this.getTotalPoints(teamId),
-      totalGames: await this.getTotalGames(teamId),
-      totalVictories: await this.getTotalVictories(teamId),
-      totalDraws: await this.getTotalDraws(teamId),
-      totalLosses: await this.getTotalLosses(teamId),
-      goalsFavor: await this.getTotalGoalsFavor(teamId),
-      goalsOwn: await this.getTotalGoalsOwn(teamId),
-      goalsBalance: await this.getTotalGoalsBalance(teamId),
+      totalPoints: homeStats.totalPoints + awayStats.totalPoints,
+      totalGames: homeStats.totalGames + awayStats.totalGames,
+      totalVictories: homeStats.totalVictories + awayStats.totalVictories,
+      totalDraws: homeStats.totalDraws + awayStats.totalDraws,
+      totalLosses: homeStats.totalLosses + awayStats.totalLosses,
+      goalsFavor: homeStats.goalsFavor + awayStats.goalsFavor,
+      goalsOwn: homeStats.goalsOwn + awayStats.goalsOwn,
+      goalsBalance: homeStats.goalsBalance + awayStats.goalsBalance,
       efficiency: await this.getTeamEfficiency(teamId),
     };
 
@@ -105,57 +107,11 @@ export default class LeaderboardController {
     return 0;
   }
 
-  public async getTotalPoints(teamId: number) {
-    const homeStats = await this.leaderboardHomeController.getHomeTeamStats(teamId);
-    const awayStats = await this.leaderboardAwayController.getAwayTeamStats(teamId);
-    return homeStats.totalPoints + awayStats.totalPoints;
-  }
-
-  public async getTotalGames(teamId: number) {
-    const homeStats = await this.leaderboardHomeController.getHomeTeamStats(teamId);
-    const awayStats = await this.leaderboardAwayController.getAwayTeamStats(teamId);
-    return homeStats.totalGames + awayStats.totalGames;
-  }
-
-  public async getTotalVictories(teamId: number) {
-    const homeStats = await this.leaderboardHomeController.getHomeTeamStats(teamId);
-    const awayStats = await this.leaderboardAwayController.getAwayTeamStats(teamId);
-    return homeStats.totalVictories + awayStats.totalVictories;
-  }
-
-  public async getTotalDraws(teamId: number) {
-    const homeStats = await this.leaderboardHomeController.getHomeTeamStats(teamId);
-    const awayStats = await this.leaderboardAwayController.getAwayTeamStats(teamId);
-    return homeStats.totalDraws + awayStats.totalDraws;
-  }
-
-  public async getTotalLosses(teamId: number) {
-    const homeStats = await this.leaderboardHomeController.getHomeTeamStats(teamId);
-    const awayStats = await this.leaderboardAwayController.getAwayTeamStats(teamId);
-    return homeStats.totalLosses + awayStats.totalLosses;
-  }
-
-  public async getTotalGoalsFavor(teamId: number) {
-    const homeStats = await this.leaderboardHomeController.getHomeTeamStats(teamId);
-    const awayStats = await this.leaderboardAwayController.getAwayTeamStats(teamId);
-    return homeStats.goalsFavor + awayStats.goalsFavor;
-  }
-
-  public async getTotalGoalsOwn(teamId: number) {
-    const homeStats = await this.leaderboardHomeController.getHomeTeamStats(teamId);
-    const awayStats = await this.leaderboardAwayController.getAwayTeamStats(teamId);
-    return homeStats.goalsOwn + awayStats.goalsOwn;
-  }
-
-  public async getTotalGoalsBalance(teamId: number) {
-    const homeStats = await this.leaderboardHomeController.getHomeTeamStats(teamId);
-    const awayStats = await this.leaderboardAwayController.getAwayTeamStats(teamId);
-    return homeStats.goalsBalance + awayStats.goalsBalance;
-  }
-
   public async getTeamEfficiency(teamId: number) {
-    const totalPoints = await this.getTotalPoints(teamId) ?? 0;
-    const totalGames = await this.getTotalGames(teamId) ?? 0;
+    const homeStats = await this.leaderboardHomeController.getHomeTeamStats(teamId);
+    const awayStats = await this.leaderboardAwayController.getAwayTeamStats(teamId);
+    const totalPoints = homeStats.totalPoints + awayStats.totalPoints;
+    const totalGames = homeStats.totalGames + awayStats.totalGames;
 
     const efficiency = (totalPoints / (totalGames * 3)) * 100;
 
