@@ -22,7 +22,6 @@ export default class LeaderboardAwayController {
         .sortLeaderboard(leaderboardData as ILeaderboard[]);
       res.status(200).json(newLeaderboard);
     }
-
     res.status(500).json({ message: 'Database Error' });
   }
 
@@ -38,7 +37,6 @@ export default class LeaderboardAwayController {
       goalsBalance: await this.getTotalAwayGoalsBalance(teamId),
       efficiency: await this.getTeamAwayEfficiency(teamId),
     };
-
     return stats;
   }
 
@@ -50,12 +48,11 @@ export default class LeaderboardAwayController {
       if (a.totalVictories !== b.totalVictories) {
         return LeaderboardAwayController.sortByVictories(a, b);
       }
-      if (a.goalsFavor - a.goalsOwn !== b.goalsFavor - b.goalsOwn) {
+      if (a.goalsBalance !== b.goalsBalance) {
         return LeaderboardAwayController.sortByGoalsBalance(a, b);
       }
       return LeaderboardAwayController.sortByScoredGoals(a, b);
     });
-
     return newLeaderboard;
   }
 
@@ -66,7 +63,6 @@ export default class LeaderboardAwayController {
     if (a.totalPoints < b.totalPoints) {
       return 1;
     }
-
     return 0;
   }
 
@@ -77,7 +73,6 @@ export default class LeaderboardAwayController {
     if (a.totalVictories < b.totalVictories) {
       return 1;
     }
-
     return 0;
   }
 
@@ -88,7 +83,6 @@ export default class LeaderboardAwayController {
     if (a.goalsBalance < b.goalsBalance) {
       return 1;
     }
-
     return 0;
   }
 
@@ -99,7 +93,6 @@ export default class LeaderboardAwayController {
     if (a.goalsFavor < b.goalsFavor) {
       return 1;
     }
-
     return 0;
   }
 
@@ -116,12 +109,11 @@ export default class LeaderboardAwayController {
             acc += 1;
           }
         }
-
         return acc;
       }, acc);
-
       return acc;
     }
+    return 0;
   }
 
   public async getTotalAwayGames(teamId: number) {
@@ -132,11 +124,11 @@ export default class LeaderboardAwayController {
         if (match.awayTeamId === teamId) {
           acc += 1;
         }
-
         return acc;
       }, acc);
       return acc;
     }
+    return 0;
   }
 
   public async getTotalAwayVictories(teamId: number) {
@@ -147,12 +139,11 @@ export default class LeaderboardAwayController {
         if (match.awayTeamId === teamId && match.homeTeamGoals < match.awayTeamGoals) {
           acc += 1;
         }
-
         return acc;
       }, acc);
-
       return acc;
     }
+    return 0;
   }
 
   public async getTotalAwayDraws(teamId: number) {
@@ -163,12 +154,11 @@ export default class LeaderboardAwayController {
         if (match.awayTeamId === teamId && match.homeTeamGoals === match.awayTeamGoals) {
           acc += 1;
         }
-
         return acc;
       }, acc);
-
       return acc;
     }
+    return 0;
   }
 
   public async getTotalAwayLosses(teamId: number) {
@@ -179,12 +169,11 @@ export default class LeaderboardAwayController {
         if (match.awayTeamId === teamId && match.homeTeamGoals > match.awayTeamGoals) {
           acc += 1;
         }
-
         return acc;
       }, acc);
-
       return acc;
     }
+    return 0;
   }
 
   public async getTotalAwayGoalsFavor(teamId: number) {
@@ -195,12 +184,11 @@ export default class LeaderboardAwayController {
         if (match.awayTeamId === teamId) {
           acc += match.awayTeamGoals;
         }
-
         return acc;
       }, acc);
-
       return acc;
     }
+    return 0;
   }
 
   public async getTotalAwayGoalsOwn(teamId: number) {
@@ -211,12 +199,11 @@ export default class LeaderboardAwayController {
         if (match.awayTeamId === teamId) {
           acc += match.homeTeamGoals;
         }
-
         return acc;
       }, acc);
-
       return acc;
     }
+    return 0;
   }
 
   public async getTotalAwayGoalsBalance(teamId: number) {
@@ -228,12 +215,11 @@ export default class LeaderboardAwayController {
           acc += match.awayTeamGoals;
           acc -= match.homeTeamGoals;
         }
-
         return acc;
       }, acc);
-
       return acc;
     }
+    return 0;
   }
 
   public async getTeamAwayEfficiency(teamId: number) {

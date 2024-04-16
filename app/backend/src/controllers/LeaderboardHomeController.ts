@@ -22,7 +22,6 @@ export default class LeaderboardHomeController {
         .sortLeaderboard(leaderboardData as ILeaderboard[]);
       res.status(200).json(newLeaderboard);
     }
-
     res.status(500).json({ message: 'Database Error' });
   }
 
@@ -38,7 +37,6 @@ export default class LeaderboardHomeController {
       goalsBalance: await this.getTotalHomeGoalsBalance(teamId),
       efficiency: await this.getTeamHomeEfficiency(teamId),
     };
-
     return stats;
   }
 
@@ -50,12 +48,11 @@ export default class LeaderboardHomeController {
       if (a.totalVictories !== b.totalVictories) {
         return LeaderboardHomeController.sortByVictories(a, b);
       }
-      if (a.goalsFavor - a.goalsOwn !== b.goalsFavor - b.goalsOwn) {
+      if (a.goalsBalance !== b.goalsBalance) {
         return LeaderboardHomeController.sortByGoalsBalance(a, b);
       }
       return LeaderboardHomeController.sortByScoredGoals(a, b);
     });
-
     return newLeaderboard;
   }
 
@@ -66,7 +63,6 @@ export default class LeaderboardHomeController {
     if (a.totalPoints < b.totalPoints) {
       return 1;
     }
-
     return 0;
   }
 
@@ -77,7 +73,6 @@ export default class LeaderboardHomeController {
     if (a.totalVictories < b.totalVictories) {
       return 1;
     }
-
     return 0;
   }
 
@@ -88,7 +83,6 @@ export default class LeaderboardHomeController {
     if (a.goalsBalance < b.goalsBalance) {
       return 1;
     }
-
     return 0;
   }
 
@@ -99,11 +93,10 @@ export default class LeaderboardHomeController {
     if (a.goalsFavor < b.goalsFavor) {
       return 1;
     }
-
     return 0;
   }
 
-  public async getTotalHomePoints(teamId: number) {
+  public async getTotalHomePoints(teamId: number): Promise<number> {
     const finishedMatches = await this.matchService.getAllMatchesByFilter(false);
     if (finishedMatches.status === 'SUCCESSFUL') {
       let acc = 0;
@@ -116,12 +109,11 @@ export default class LeaderboardHomeController {
             acc += 1;
           }
         }
-
         return acc;
       }, acc);
-
       return acc;
     }
+    return 0;
   }
 
   public async getTotalHomeGames(teamId: number) {
@@ -132,11 +124,11 @@ export default class LeaderboardHomeController {
         if (match.homeTeamId === teamId) {
           acc += 1;
         }
-
         return acc;
       }, acc);
       return acc;
     }
+    return 0;
   }
 
   public async getTotalHomeVictories(teamId: number) {
@@ -147,12 +139,11 @@ export default class LeaderboardHomeController {
         if (match.homeTeamId === teamId && match.homeTeamGoals > match.awayTeamGoals) {
           acc += 1;
         }
-
         return acc;
       }, acc);
-
       return acc;
     }
+    return 0;
   }
 
   public async getTotalHomeDraws(teamId: number) {
@@ -163,12 +154,11 @@ export default class LeaderboardHomeController {
         if (match.homeTeamId === teamId && match.homeTeamGoals === match.awayTeamGoals) {
           acc += 1;
         }
-
         return acc;
       }, acc);
-
       return acc;
     }
+    return 0;
   }
 
   public async getTotalHomeLosses(teamId: number) {
@@ -179,12 +169,11 @@ export default class LeaderboardHomeController {
         if (match.homeTeamId === teamId && match.homeTeamGoals < match.awayTeamGoals) {
           acc += 1;
         }
-
         return acc;
       }, acc);
-
       return acc;
     }
+    return 0;
   }
 
   public async getTotalHomeGoalsFavor(teamId: number) {
@@ -195,12 +184,11 @@ export default class LeaderboardHomeController {
         if (match.homeTeamId === teamId) {
           acc += match.homeTeamGoals;
         }
-
         return acc;
       }, acc);
-
       return acc;
     }
+    return 0;
   }
 
   public async getTotalHomeGoalsOwn(teamId: number) {
@@ -211,12 +199,11 @@ export default class LeaderboardHomeController {
         if (match.homeTeamId === teamId) {
           acc += match.awayTeamGoals;
         }
-
         return acc;
       }, acc);
-
       return acc;
     }
+    return 0;
   }
 
   public async getTotalHomeGoalsBalance(teamId: number) {
@@ -228,12 +215,11 @@ export default class LeaderboardHomeController {
           acc += match.homeTeamGoals;
           acc -= match.awayTeamGoals;
         }
-
         return acc;
       }, acc);
-
       return acc;
     }
+    return 0;
   }
 
   public async getTeamHomeEfficiency(teamId: number) {
