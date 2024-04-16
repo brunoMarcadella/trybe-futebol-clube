@@ -6,7 +6,7 @@ import chaiHttp = require('chai-http');
 import { app } from '../app';
 
 import SequelizeMatch from '../database/models/SequelizeMatch';
-import { finishedMatches, matches, unfinishedMatches } from './mocks/Match.mocks';
+import { awayTeam, createdMatch, finishedMatches, homeTeam, inexistentTeamIdMatchBody, matches, twoEqualTeamsMatchBody, unfinishedMatch, unfinishedMatches, validCreateMatchBody, validUpdateGoalsMatchBody } from './mocks/Match.mocks';
 import JWT from '../utils/JWT';
 
 chai.use(chaiHttp);
@@ -48,37 +48,161 @@ describe('Match Test', function() {
   });
 
   it('should return a message after finish a match', async function() {
-    sinon.stub(JWT, 'verify').returns();
-    sinon.stub(SequelizeUser, 'findOne').resolves(userRegistered as any);
-    sinon.stub(SequelizeMatch, 'findAll').resolves(finishedMatches as any);
+    sinon.stub(JWT, 'verify').resolves({ id: 1, email: 'teste@teste.com' });
+    sinon.stub(SequelizeMatch, 'findByPk').resolves(unfinishedMatch as any);
+    sinon.stub(SequelizeMatch, 'update').resolves();
 
     const { status, body } = await chai.request(app)
-      .get('/matches')
-      .query({ inProgress: false })
+      .patch('/matches/1/finish')
+      .set('Authorization', 'Bearer ValidToken')
       .send();
 
     expect(status).to.equal(200);
-    expect(body).to.deep.equal(finishedMatches);
+    expect(body).to.deep.equal({ message: 'Finished'});
   });
 
+  it('should return token not found when try to finish a match without a token', async function() {
+    sinon.stub(JWT, 'verify').resolves({ id: 1, email: 'admin@admin.com' });
+    
 
-  // it('should return a team by id', async function() {
-  //   sinon.stub(SequelizeTeam, 'findOne').resolves(team as any);
+    const { status, body } = await chai.request(app)
+      .patch('/matches/1/finish')
+      .set('Authorization', '')
+      .send();
+    
+    expect(status).to.equal(401);
+    expect(body.message).to.deep.equal('Token not found');
+  });
 
-  //   const { status, body } = await chai.request(app).get('/teams/5');
+  it('should return token must be a valid token when try to finish a match without a token', async function() {
+    sinon.stub(JWT, 'verify').resolves('Token must be a valid token');
+    
 
-  //   expect(status).to.equal(200);
-  //   expect(body).to.deep.equal(team);
-  // });
+    const { status, body } = await chai.request(app)
+      .patch('/matches/1/finish')
+      .set('Authorization', 'Bearer InvalidToken')
+      .send();
+    
+    expect(status).to.equal(401);
+    expect(body.message).to.deep.equal('Token must be a valid token');
+  });
 
-  // it('should return not found if the team doesnt exists', async function() {
-  //   sinon.stub(SequelizeTeam, 'findOne').resolves(null);
+  it('should return code 200 when try to update a match in progress', async function() {
+    sinon.stub(JWT, 'verify').resolves({ id: 1, email: 'teste@teste.com' });
+    sinon.stub(SequelizeMatch, 'findByPk').resolves(unfinishedMatch as any);
+    sinon.stub(SequelizeMatch, 'update').resolves();
 
-  //   const { status, body } = await chai.request(app).get('/teams/100');
+    const { status, body } = await chai.request(app)
+      .patch('/matches/1')
+      .set('Authorization', 'Bearer ValidToken')
+      .send(validUpdateGoalsMatchBody);
 
-  //   expect(status).to.equal(404);
-  //   expect(body.message).to.equal('Team 100 not found');
-  // });
+    expect(status).to.equal(200);
+  });
+
+  it('should return token not found when try to update goals match without a token', async function() {
+    sinon.stub(JWT, 'verify').resolves({ id: 1, email: 'admin@admin.com' });
+    
+
+    const { status, body } = await chai.request(app)
+      .patch('/matches/1')
+      .set('Authorization', '')
+      .send();
+    
+    expect(status).to.equal(401);
+    expect(body.message).to.deep.equal('Token not found');
+  });
+
+  it('should return token must be a valid token when try to goals match without a token', async function() {
+    sinon.stub(JWT, 'verify').resolves('Token must be a valid token');
+    
+
+    const { status, body } = await chai.request(app)
+      .patch('/matches/1')
+      .set('Authorization', 'Bearer InvalidToken')
+      .send();
+    
+    expect(status).to.equal(401);
+    expect(body.message).to.deep.equal('Token must be a valid token');
+  });
+
+  it('should return the new match with id when create a new match', async function() {
+    sinon.stub(JWT, 'verify').resolves({ id: 1, email: 'teste@teste.com' });
+    sinon.stub(SequelizeMatch, 'findByPk')
+      .onFirstCall()
+      .resolves(homeTeam as any)
+      .onSecondCall()
+      .resolves(awayTeam as any);
+    sinon.stub(SequelizeMatch, 'create').resolves(createdMatch as any);
+
+    const { status, body } = await chai.request(app)
+      .post('/matches')
+      .set('Authorization', 'Bearer ValidToken')
+      .send(validCreateMatchBody);
+
+    expect(status).to.equal(201);
+    expect(body).to.deep.equal(createdMatch);
+  });
+
+  it('should return token not found when try to create a new match without a token', async function() {
+    sinon.stub(JWT, 'verify').resolves({ id: 1, email: 'admin@admin.com' });
+    
+
+    const { status, body } = await chai.request(app)
+      .post('/matches')
+      .set('Authorization', '')
+      .send(validCreateMatchBody);
+    
+    expect(status).to.equal(401);
+    expect(body.message).to.deep.equal('Token not found');
+  });
+
+  it('should return token must be a valid token when try to create a new match without a token', async function() {
+    sinon.stub(JWT, 'verify').resolves('Token must be a valid token');
+    
+
+    const { status, body } = await chai.request(app)
+      .post('/matches')
+      .set('Authorization', 'Bearer InvalidToken')
+      .send(validCreateMatchBody);
+    
+    expect(status).to.equal(401);
+    expect(body.message).to.deep.equal('Token must be a valid token');
+  });
+
+  it('should return a message when try to create a new match with two equal teams', async function() {
+    sinon.stub(JWT, 'verify').resolves({ id: 1, email: 'teste@teste.com' });
+    sinon.stub(SequelizeMatch, 'findByPk')
+      .onFirstCall()
+      .resolves(homeTeam as any)
+      .onSecondCall()
+      .resolves(homeTeam as any);
+
+    const { status, body } = await chai.request(app)
+      .post('/matches')
+      .set('Authorization', 'Bearer ValidToken')
+      .send(twoEqualTeamsMatchBody);
+
+    expect(status).to.equal(422);
+    expect(body.message).to.deep.equal('It is not possible to create a match with two equal teams');
+  });
+
+  it('should return a message when try to create a new match with a inexistent team id', async function() {
+    sinon.stub(JWT, 'verify').resolves({ id: 1, email: 'teste@teste.com' });
+    sinon.stub(SequelizeMatch, 'findByPk')
+      .onFirstCall()
+      .resolves(homeTeam as any)
+      .onSecondCall()
+      .resolves(null);
+
+    const { status, body } = await chai.request(app)
+      .post('/matches')
+      .set('Authorization', 'Bearer ValidToken')
+      .send(inexistentTeamIdMatchBody);
+
+    expect(status).to.equal(404);
+    expect(body.message).to.deep.equal('There is no team with such id!');
+  });
 
   afterEach(sinon.restore);
 });

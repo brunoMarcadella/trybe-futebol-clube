@@ -76,5 +76,47 @@ describe('Login Test', function() {
     expect(body.message).to.equal('Invalid email or password');
   });
 
+  it('should return user role', async function() {
+    sinon.stub(JWT, 'verify').resolves({ id: 1, email: 'admin@admin.com' });
+    sinon.stub(SequelizeUser, 'findOne').resolves(userRegistered as any);
+    
+
+    const { status, body } = await chai.request(app)
+      .get('/login/role')
+      .set('Authorization', 'Bearer ValidToken')
+      .send();
+    
+    expect(status).to.equal(200);
+    expect(body).to.deep.equal({ role: 'admin'});
+  });
+
+  it('should return token not found when try to get user role without a token', async function() {
+    sinon.stub(JWT, 'verify').resolves({ id: 1, email: 'admin@admin.com' });
+    sinon.stub(SequelizeUser, 'findOne').resolves(userRegistered as any);
+    
+
+    const { status, body } = await chai.request(app)
+      .get('/login/role')
+      .set('Authorization', '')
+      .send();
+    
+    expect(status).to.equal(401);
+    expect(body.message).to.deep.equal('Token not found');
+  });
+
+  it('should return token must be a valid token when try to get user role without a token', async function() {
+    sinon.stub(JWT, 'verify').resolves('Token must be a valid token');
+    sinon.stub(SequelizeUser, 'findOne').resolves(userRegistered as any);
+    
+
+    const { status, body } = await chai.request(app)
+      .get('/login/role')
+      .set('Authorization', 'Bearer InvalidToken')
+      .send();
+    
+    expect(status).to.equal(401);
+    expect(body.message).to.deep.equal('Token must be a valid token');
+  });
+
   afterEach(sinon.restore);
 });
