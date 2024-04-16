@@ -35,6 +35,8 @@ export default class LeaderboardController {
       totalLosses: await this.getTotalHomeLosses(teamId),
       goalsFavor: await this.getTotalHomeGoalsFavor(teamId),
       goalsOwn: await this.getTotalHomeGoalsOwn(teamId),
+      goalsBalance: await this.getTotalHomeGoalsBalance(teamId),
+      efficiency: await this.getTeamHomeEfficiency(teamId),
     };
 
     return stats;
@@ -49,7 +51,7 @@ export default class LeaderboardController {
         return LeaderboardController.sortByVictories(a, b);
       }
       if (a.goalsFavor - a.goalsOwn !== b.goalsFavor - b.goalsOwn) {
-        return LeaderboardController.sortByGoalDifference(a, b);
+        return LeaderboardController.sortByGoalsBalance(a, b);
       }
       return LeaderboardController.sortByScoredGoals(a, b);
     });
@@ -79,11 +81,11 @@ export default class LeaderboardController {
     return 0;
   }
 
-  static sortByGoalDifference(a: ILeaderboard, b: ILeaderboard) {
-    if (a.goalsFavor - a.goalsOwn > b.goalsFavor - b.goalsOwn) {
+  static sortByGoalsBalance(a: ILeaderboard, b: ILeaderboard) {
+    if (a.goalsBalance > b.goalsBalance) {
       return -1;
     }
-    if (a.goalsFavor - a.goalsOwn < b.goalsFavor - b.goalsOwn) {
+    if (a.goalsBalance < b.goalsBalance) {
       return 1;
     }
 
@@ -215,5 +217,31 @@ export default class LeaderboardController {
 
       return acc;
     }
+  }
+
+  public async getTotalHomeGoalsBalance(teamId: number) {
+    const finishedMatches = await this.matchService.getAllMatchesByFilter(false);
+    if (finishedMatches.status === 'SUCCESSFUL') {
+      let acc = 0;
+      finishedMatches.data.reduce((_acc, match) => {
+        if (match.homeTeamId === teamId) {
+          acc += match.homeTeamGoals;
+          acc -= match.awayTeamGoals;
+        }
+
+        return acc;
+      }, acc);
+
+      return acc;
+    }
+  }
+
+  public async getTeamHomeEfficiency(teamId: number) {
+    const totalPoints = await this.getTotalPointsInHome(teamId) ?? 0;
+    const totalGames = await this.getTotalHomeGames(teamId) ?? 0;
+
+    const efficiency = (totalPoints / (totalGames * 3)) * 100;
+
+    return efficiency.toFixed(2);
   }
 }
