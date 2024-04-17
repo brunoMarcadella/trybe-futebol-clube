@@ -1,41 +1,41 @@
 import { Request, Response } from 'express';
+import { IMatch } from '../Interfaces/matches/IMatch';
+import { ServiceResponse } from '../Interfaces/ServiceResponse';
 import { ILeaderboard } from '../Interfaces/leaderboard/ILeaderboard';
 import TeamService from '../services/TeamService';
 import MatchService from '../services/MatchService';
 
 export default class LeaderboardHomeController {
-  constructor(
-    private matchService = new MatchService(),
-    private teamService = new TeamService(),
-  ) { }
+  private teamService = new TeamService();
+  private matchService = new MatchService();
 
   public async getHomeLeaderboard(_req: Request, res: Response) {
     const teams = await this.teamService.getAllTeams();
-    if (teams.status === 'SUCCESSFUL') {
-      const leaderboardData = await Promise.all(
-        teams.data.map(async (team) => ({
-          name: team.teamName,
-          ...await this.getHomeTeamStats(team.id),
-        })),
-      );
+    const finishedMatches = await this.matchService.getAllMatchesByFilter(false);
+    if (teams.status === 'SUCCESSFUL' && finishedMatches.status === 'SUCCESSFUL') {
+      const leaderboardData = teams.data.map((team) => ({
+        name: team.teamName,
+        ...LeaderboardHomeController.getHomeTeamStats(team.id, finishedMatches),
+      }));
       const newLeaderboard = LeaderboardHomeController
         .sortLeaderboard(leaderboardData as ILeaderboard[]);
       res.status(200).json(newLeaderboard);
+    } else {
+      res.status(500).json({ message: 'Database Error' });
     }
-    res.status(500).json({ message: 'Database Error' });
   }
 
-  public async getHomeTeamStats(teamId: number) {
+  public static getHomeTeamStats(teamId: number, finishedMatches: ServiceResponse<IMatch[]>) {
     const stats = {
-      totalPoints: await this.getTotalHomePoints(teamId),
-      totalGames: await this.getTotalHomeGames(teamId),
-      totalVictories: await this.getTotalHomeVictories(teamId),
-      totalDraws: await this.getTotalHomeDraws(teamId),
-      totalLosses: await this.getTotalHomeLosses(teamId),
-      goalsFavor: await this.getTotalHomeGoalsFavor(teamId),
-      goalsOwn: await this.getTotalHomeGoalsOwn(teamId),
-      goalsBalance: await this.getTotalHomeGoalsBalance(teamId),
-      efficiency: await this.getTeamHomeEfficiency(teamId),
+      totalPoints: LeaderboardHomeController.getTotalHomePoints(teamId, finishedMatches),
+      totalGames: LeaderboardHomeController.getTotalHomeGames(teamId, finishedMatches),
+      totalVictories: LeaderboardHomeController.getTotalHomeVictories(teamId, finishedMatches),
+      totalDraws: LeaderboardHomeController.getTotalHomeDraws(teamId, finishedMatches),
+      totalLosses: LeaderboardHomeController.getTotalHomeLosses(teamId, finishedMatches),
+      goalsFavor: LeaderboardHomeController.getTotalHomeGoalsFavor(teamId, finishedMatches),
+      goalsOwn: LeaderboardHomeController.getTotalHomeGoalsOwn(teamId, finishedMatches),
+      goalsBalance: LeaderboardHomeController.getTotalHomeGoalsBalance(teamId, finishedMatches),
+      efficiency: LeaderboardHomeController.getTeamHomeEfficiency(teamId, finishedMatches),
     };
     return stats;
   }
@@ -96,18 +96,16 @@ export default class LeaderboardHomeController {
     return 0;
   }
 
-  public async getTotalHomePoints(teamId: number): Promise<number> {
-    const finishedMatches = await this.matchService.getAllMatchesByFilter(false);
+  public static getTotalHomePoints(
+    teamId: number,
+    finishedMatches: ServiceResponse<IMatch[]>,
+  ): number {
     if (finishedMatches.status === 'SUCCESSFUL') {
       let acc = 0;
-      finishedMatches.data.reduce((_acc, match) => {
+      finishedMatches.data.reduce((_acc: number, match: IMatch) => {
         if (match.homeTeamId === teamId) {
-          if (match.homeTeamGoals > match.awayTeamGoals) {
-            acc += 3;
-          }
-          if (match.homeTeamGoals === match.awayTeamGoals) {
-            acc += 1;
-          }
+          if (match.homeTeamGoals > match.awayTeamGoals) acc += 3;
+          if (match.homeTeamGoals === match.awayTeamGoals) acc += 1;
         }
         return acc;
       }, acc);
@@ -116,11 +114,10 @@ export default class LeaderboardHomeController {
     return 0;
   }
 
-  public async getTotalHomeGames(teamId: number) {
-    const finishedMatches = await this.matchService.getAllMatchesByFilter(false);
+  public static getTotalHomeGames(teamId: number, finishedMatches: ServiceResponse<IMatch[]>) {
     if (finishedMatches.status === 'SUCCESSFUL') {
       let acc = 0;
-      finishedMatches.data.reduce((_acc, match) => {
+      finishedMatches.data.reduce((_acc: number, match: IMatch) => {
         if (match.homeTeamId === teamId) {
           acc += 1;
         }
@@ -131,11 +128,10 @@ export default class LeaderboardHomeController {
     return 0;
   }
 
-  public async getTotalHomeVictories(teamId: number) {
-    const finishedMatches = await this.matchService.getAllMatchesByFilter(false);
+  public static getTotalHomeVictories(teamId: number, finishedMatches: ServiceResponse<IMatch[]>) {
     if (finishedMatches.status === 'SUCCESSFUL') {
       let acc = 0;
-      finishedMatches.data.reduce((_acc, match) => {
+      finishedMatches.data.reduce((_acc: number, match: IMatch) => {
         if (match.homeTeamId === teamId && match.homeTeamGoals > match.awayTeamGoals) {
           acc += 1;
         }
@@ -146,11 +142,10 @@ export default class LeaderboardHomeController {
     return 0;
   }
 
-  public async getTotalHomeDraws(teamId: number) {
-    const finishedMatches = await this.matchService.getAllMatchesByFilter(false);
+  public static getTotalHomeDraws(teamId: number, finishedMatches: ServiceResponse<IMatch[]>) {
     if (finishedMatches.status === 'SUCCESSFUL') {
       let acc = 0;
-      finishedMatches.data.reduce((_acc, match) => {
+      finishedMatches.data.reduce((_acc: number, match: IMatch) => {
         if (match.homeTeamId === teamId && match.homeTeamGoals === match.awayTeamGoals) {
           acc += 1;
         }
@@ -161,11 +156,10 @@ export default class LeaderboardHomeController {
     return 0;
   }
 
-  public async getTotalHomeLosses(teamId: number) {
-    const finishedMatches = await this.matchService.getAllMatchesByFilter(false);
+  public static getTotalHomeLosses(teamId: number, finishedMatches: ServiceResponse<IMatch[]>) {
     if (finishedMatches.status === 'SUCCESSFUL') {
       let acc = 0;
-      finishedMatches.data.reduce((_acc, match) => {
+      finishedMatches.data.reduce((_acc: number, match: IMatch) => {
         if (match.homeTeamId === teamId && match.homeTeamGoals < match.awayTeamGoals) {
           acc += 1;
         }
@@ -176,11 +170,10 @@ export default class LeaderboardHomeController {
     return 0;
   }
 
-  public async getTotalHomeGoalsFavor(teamId: number) {
-    const finishedMatches = await this.matchService.getAllMatchesByFilter(false);
+  public static getTotalHomeGoalsFavor(teamId: number, finishedMatches: ServiceResponse<IMatch[]>) {
     if (finishedMatches.status === 'SUCCESSFUL') {
       let acc = 0;
-      finishedMatches.data.reduce((_acc, match) => {
+      finishedMatches.data.reduce((_acc: number, match: IMatch) => {
         if (match.homeTeamId === teamId) {
           acc += match.homeTeamGoals;
         }
@@ -191,11 +184,10 @@ export default class LeaderboardHomeController {
     return 0;
   }
 
-  public async getTotalHomeGoalsOwn(teamId: number) {
-    const finishedMatches = await this.matchService.getAllMatchesByFilter(false);
+  public static getTotalHomeGoalsOwn(teamId: number, finishedMatches: ServiceResponse<IMatch[]>) {
     if (finishedMatches.status === 'SUCCESSFUL') {
       let acc = 0;
-      finishedMatches.data.reduce((_acc, match) => {
+      finishedMatches.data.reduce((_acc: number, match: IMatch) => {
         if (match.homeTeamId === teamId) {
           acc += match.awayTeamGoals;
         }
@@ -206,11 +198,13 @@ export default class LeaderboardHomeController {
     return 0;
   }
 
-  public async getTotalHomeGoalsBalance(teamId: number) {
-    const finishedMatches = await this.matchService.getAllMatchesByFilter(false);
+  public static getTotalHomeGoalsBalance(
+    teamId: number,
+    finishedMatches: ServiceResponse<IMatch[]>,
+  ) {
     if (finishedMatches.status === 'SUCCESSFUL') {
       let acc = 0;
-      finishedMatches.data.reduce((_acc, match) => {
+      finishedMatches.data.reduce((_acc: number, match: IMatch) => {
         if (match.homeTeamId === teamId) {
           acc += match.homeTeamGoals;
           acc -= match.awayTeamGoals;
@@ -222,9 +216,9 @@ export default class LeaderboardHomeController {
     return 0;
   }
 
-  public async getTeamHomeEfficiency(teamId: number) {
-    const totalPoints = await this.getTotalHomePoints(teamId) ?? 0;
-    const totalGames = await this.getTotalHomeGames(teamId) ?? 0;
+  public static getTeamHomeEfficiency(teamId: number, finishedMatches: ServiceResponse<IMatch[]>) {
+    const totalPoints = LeaderboardHomeController.getTotalHomePoints(teamId, finishedMatches) ?? 0;
+    const totalGames = LeaderboardHomeController.getTotalHomeGames(teamId, finishedMatches) ?? 0;
 
     const efficiency = (totalPoints / (totalGames * 3)) * 100;
 

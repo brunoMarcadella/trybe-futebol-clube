@@ -1,36 +1,37 @@
 import { Request, Response } from 'express';
+import { ServiceResponse } from '../Interfaces/ServiceResponse';
+import { IMatch } from '../Interfaces/matches/IMatch';
 import { ILeaderboard } from '../Interfaces/leaderboard/ILeaderboard';
 import LeaderboardHomeController from './LeaderboardHomeController';
 import LeaderboardAwayController from './LeaderboardAwayController';
 import TeamService from '../services/TeamService';
+import MatchService from '../services/MatchService';
 
 export default class LeaderboardController {
-  constructor(
-    private teamService = new TeamService(),
-    private leaderboardHomeController = new LeaderboardHomeController(),
-    private leaderboardAwayController = new LeaderboardAwayController(),
-  ) { }
+  private teamService = new TeamService();
+  private matchService = new MatchService();
 
   public async getLeaderboard(_req: Request, res: Response) {
     const teams = await this.teamService.getAllTeams();
+    const finishedMatches = await this.matchService.getAllMatchesByFilter(false);
     if (teams.status === 'SUCCESSFUL') {
       const leaderboardData = await Promise.all(
         teams.data.map(async (team) => ({
           name: team.teamName,
-          ...await this.getTeamStats(team.id),
+          ...LeaderboardController.getTeamStats(team.id, finishedMatches),
         })),
       );
       const newLeaderboard = LeaderboardController
         .sortLeaderboard(leaderboardData as ILeaderboard[]);
       res.status(200).json(newLeaderboard);
+    } else {
+      res.status(500).json({ message: 'Database Error' });
     }
-
-    res.status(500).json({ message: 'Database Error' });
   }
 
-  public async getTeamStats(teamId: number) {
-    const homeStats = await this.leaderboardHomeController.getHomeTeamStats(teamId);
-    const awayStats = await this.leaderboardAwayController.getAwayTeamStats(teamId);
+  static getTeamStats(teamId: number, finishedMatches: ServiceResponse<IMatch[]>) {
+    const homeStats = LeaderboardHomeController.getHomeTeamStats(teamId, finishedMatches);
+    const awayStats = LeaderboardAwayController.getAwayTeamStats(teamId, finishedMatches);
     const stats = {
       totalPoints: homeStats.totalPoints + awayStats.totalPoints,
       totalGames: homeStats.totalGames + awayStats.totalGames,
@@ -40,7 +41,7 @@ export default class LeaderboardController {
       goalsFavor: homeStats.goalsFavor + awayStats.goalsFavor,
       goalsOwn: homeStats.goalsOwn + awayStats.goalsOwn,
       goalsBalance: homeStats.goalsBalance + awayStats.goalsBalance,
-      efficiency: await this.getTeamEfficiency(teamId),
+      efficiency: LeaderboardController.getTeamEfficiency(teamId, finishedMatches),
     };
 
     return stats;
@@ -107,9 +108,9 @@ export default class LeaderboardController {
     return 0;
   }
 
-  public async getTeamEfficiency(teamId: number) {
-    const homeStats = await this.leaderboardHomeController.getHomeTeamStats(teamId);
-    const awayStats = await this.leaderboardAwayController.getAwayTeamStats(teamId);
+  static getTeamEfficiency(teamId: number, finishedMatches: ServiceResponse<IMatch[]>) {
+    const homeStats = LeaderboardHomeController.getHomeTeamStats(teamId, finishedMatches);
+    const awayStats = LeaderboardAwayController.getAwayTeamStats(teamId, finishedMatches);
     const totalPoints = homeStats.totalPoints + awayStats.totalPoints;
     const totalGames = homeStats.totalGames + awayStats.totalGames;
 

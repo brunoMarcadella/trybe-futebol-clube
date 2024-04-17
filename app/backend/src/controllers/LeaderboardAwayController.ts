@@ -2,40 +2,40 @@ import { Request, Response } from 'express';
 import { ILeaderboard } from '../Interfaces/leaderboard/ILeaderboard';
 import TeamService from '../services/TeamService';
 import MatchService from '../services/MatchService';
+import { IMatch } from '../Interfaces/matches/IMatch';
+import { ServiceResponse } from '../Interfaces/ServiceResponse';
 
 export default class LeaderboardAwayController {
-  constructor(
-    private matchService = new MatchService(),
-    private teamService = new TeamService(),
-  ) { }
+  private teamService = new TeamService();
+  private matchService = new MatchService();
 
   public async getAwayLeaderboard(_req: Request, res: Response) {
     const teams = await this.teamService.getAllTeams();
-    if (teams.status === 'SUCCESSFUL') {
-      const leaderboardData = await Promise.all(
-        teams.data.map(async (team) => ({
-          name: team.teamName,
-          ...await this.getAwayTeamStats(team.id),
-        })),
-      );
+    const finishedMatches = await this.matchService.getAllMatchesByFilter(false);
+    if (teams.status === 'SUCCESSFUL' && finishedMatches.status === 'SUCCESSFUL') {
+      const leaderboardData = teams.data.map((team) => ({
+        name: team.teamName,
+        ...LeaderboardAwayController.getAwayTeamStats(team.id, finishedMatches),
+      }));
       const newLeaderboard = LeaderboardAwayController
         .sortLeaderboard(leaderboardData as ILeaderboard[]);
       res.status(200).json(newLeaderboard);
+    } else {
+      res.status(500).json({ message: 'Database Error' });
     }
-    res.status(500).json({ message: 'Database Error' });
   }
 
-  public async getAwayTeamStats(teamId: number) {
+  public static getAwayTeamStats(teamId: number, finishedMatches: ServiceResponse<IMatch[]>) {
     const stats = {
-      totalPoints: await this.getTotalAwayPoints(teamId),
-      totalGames: await this.getTotalAwayGames(teamId),
-      totalVictories: await this.getTotalAwayVictories(teamId),
-      totalDraws: await this.getTotalAwayDraws(teamId),
-      totalLosses: await this.getTotalAwayLosses(teamId),
-      goalsFavor: await this.getTotalAwayGoalsFavor(teamId),
-      goalsOwn: await this.getTotalAwayGoalsOwn(teamId),
-      goalsBalance: await this.getTotalAwayGoalsBalance(teamId),
-      efficiency: await this.getTeamAwayEfficiency(teamId),
+      totalPoints: LeaderboardAwayController.getTotalAwayPoints(teamId, finishedMatches),
+      totalGames: LeaderboardAwayController.getTotalAwayGames(teamId, finishedMatches),
+      totalVictories: LeaderboardAwayController.getTotalAwayVictories(teamId, finishedMatches),
+      totalDraws: LeaderboardAwayController.getTotalAwayDraws(teamId, finishedMatches),
+      totalLosses: LeaderboardAwayController.getTotalAwayLosses(teamId, finishedMatches),
+      goalsFavor: LeaderboardAwayController.getTotalAwayGoalsFavor(teamId, finishedMatches),
+      goalsOwn: LeaderboardAwayController.getTotalAwayGoalsOwn(teamId, finishedMatches),
+      goalsBalance: LeaderboardAwayController.getTotalAwayGoalsBalance(teamId, finishedMatches),
+      efficiency: LeaderboardAwayController.getTeamAwayEfficiency(teamId, finishedMatches),
     };
     return stats;
   }
@@ -96,11 +96,10 @@ export default class LeaderboardAwayController {
     return 0;
   }
 
-  public async getTotalAwayPoints(teamId: number) {
-    const finishedMatches = await this.matchService.getAllMatchesByFilter(false);
+  static getTotalAwayPoints(teamId: number, finishedMatches: ServiceResponse<IMatch[]>) {
     if (finishedMatches.status === 'SUCCESSFUL') {
       let acc = 0;
-      finishedMatches.data.reduce((_acc, match) => {
+      finishedMatches.data.reduce((_acc: number, match: IMatch) => {
         if (match.awayTeamId === teamId) {
           if (match.homeTeamGoals < match.awayTeamGoals) {
             acc += 3;
@@ -116,11 +115,10 @@ export default class LeaderboardAwayController {
     return 0;
   }
 
-  public async getTotalAwayGames(teamId: number) {
-    const finishedMatches = await this.matchService.getAllMatchesByFilter(false);
+  static getTotalAwayGames(teamId: number, finishedMatches: ServiceResponse<IMatch[]>) {
     if (finishedMatches.status === 'SUCCESSFUL') {
       let acc = 0;
-      finishedMatches.data.reduce((_acc, match) => {
+      finishedMatches.data.reduce((_acc: number, match: IMatch) => {
         if (match.awayTeamId === teamId) {
           acc += 1;
         }
@@ -131,11 +129,10 @@ export default class LeaderboardAwayController {
     return 0;
   }
 
-  public async getTotalAwayVictories(teamId: number) {
-    const finishedMatches = await this.matchService.getAllMatchesByFilter(false);
+  static getTotalAwayVictories(teamId: number, finishedMatches: ServiceResponse<IMatch[]>) {
     if (finishedMatches.status === 'SUCCESSFUL') {
       let acc = 0;
-      finishedMatches.data.reduce((_acc, match) => {
+      finishedMatches.data.reduce((_acc: number, match: IMatch) => {
         if (match.awayTeamId === teamId && match.homeTeamGoals < match.awayTeamGoals) {
           acc += 1;
         }
@@ -146,11 +143,10 @@ export default class LeaderboardAwayController {
     return 0;
   }
 
-  public async getTotalAwayDraws(teamId: number) {
-    const finishedMatches = await this.matchService.getAllMatchesByFilter(false);
+  static getTotalAwayDraws(teamId: number, finishedMatches: ServiceResponse<IMatch[]>) {
     if (finishedMatches.status === 'SUCCESSFUL') {
       let acc = 0;
-      finishedMatches.data.reduce((_acc, match) => {
+      finishedMatches.data.reduce((_acc: number, match: IMatch) => {
         if (match.awayTeamId === teamId && match.homeTeamGoals === match.awayTeamGoals) {
           acc += 1;
         }
@@ -161,11 +157,10 @@ export default class LeaderboardAwayController {
     return 0;
   }
 
-  public async getTotalAwayLosses(teamId: number) {
-    const finishedMatches = await this.matchService.getAllMatchesByFilter(false);
+  static getTotalAwayLosses(teamId: number, finishedMatches: ServiceResponse<IMatch[]>) {
     if (finishedMatches.status === 'SUCCESSFUL') {
       let acc = 0;
-      finishedMatches.data.reduce((_acc, match) => {
+      finishedMatches.data.reduce((_acc: number, match: IMatch) => {
         if (match.awayTeamId === teamId && match.homeTeamGoals > match.awayTeamGoals) {
           acc += 1;
         }
@@ -176,11 +171,10 @@ export default class LeaderboardAwayController {
     return 0;
   }
 
-  public async getTotalAwayGoalsFavor(teamId: number) {
-    const finishedMatches = await this.matchService.getAllMatchesByFilter(false);
+  static getTotalAwayGoalsFavor(teamId: number, finishedMatches: ServiceResponse<IMatch[]>) {
     if (finishedMatches.status === 'SUCCESSFUL') {
       let acc = 0;
-      finishedMatches.data.reduce((_acc, match) => {
+      finishedMatches.data.reduce((_acc: number, match: IMatch) => {
         if (match.awayTeamId === teamId) {
           acc += match.awayTeamGoals;
         }
@@ -191,11 +185,10 @@ export default class LeaderboardAwayController {
     return 0;
   }
 
-  public async getTotalAwayGoalsOwn(teamId: number) {
-    const finishedMatches = await this.matchService.getAllMatchesByFilter(false);
+  static getTotalAwayGoalsOwn(teamId: number, finishedMatches: ServiceResponse<IMatch[]>) {
     if (finishedMatches.status === 'SUCCESSFUL') {
       let acc = 0;
-      finishedMatches.data.reduce((_acc, match) => {
+      finishedMatches.data.reduce((_acc: number, match: IMatch) => {
         if (match.awayTeamId === teamId) {
           acc += match.homeTeamGoals;
         }
@@ -206,11 +199,10 @@ export default class LeaderboardAwayController {
     return 0;
   }
 
-  public async getTotalAwayGoalsBalance(teamId: number) {
-    const finishedMatches = await this.matchService.getAllMatchesByFilter(false);
+  static getTotalAwayGoalsBalance(teamId: number, finishedMatches: ServiceResponse<IMatch[]>) {
     if (finishedMatches.status === 'SUCCESSFUL') {
       let acc = 0;
-      finishedMatches.data.reduce((_acc, match) => {
+      finishedMatches.data.reduce((_acc: number, match: IMatch) => {
         if (match.awayTeamId === teamId) {
           acc += match.awayTeamGoals;
           acc -= match.homeTeamGoals;
@@ -222,9 +214,9 @@ export default class LeaderboardAwayController {
     return 0;
   }
 
-  public async getTeamAwayEfficiency(teamId: number) {
-    const totalPoints = await this.getTotalAwayPoints(teamId) ?? 0;
-    const totalGames = await this.getTotalAwayGames(teamId) ?? 0;
+  static getTeamAwayEfficiency(teamId: number, finishedMatches: ServiceResponse<IMatch[]>) {
+    const totalPoints = LeaderboardAwayController.getTotalAwayPoints(teamId, finishedMatches) ?? 0;
+    const totalGames = LeaderboardAwayController.getTotalAwayGames(teamId, finishedMatches) ?? 0;
 
     const efficiency = (totalPoints / (totalGames * 3)) * 100;
 
