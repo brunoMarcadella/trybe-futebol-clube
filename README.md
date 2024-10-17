@@ -1,153 +1,56 @@
-Claro! Aqui está um modelo de README para o seu projeto de app de receitas:
+# TFC - Trybe Futebol Clube
 
----
+## ⚽ O que é o TFC?
 
-# App de Receitas
+O TFC é um site informativo sobre partidas e classificações de futebol. Este projeto inclui o desenvolvimento de uma API utilizando o método TDD e integração com um front-end já existente, utilizando Docker para containerização.
 
-Um aplicativo moderno de receitas, desenvolvido com React, utilizando Hooks e Context API. O app permite visualizar, buscar, filtrar, favoritar e acompanhar o progresso de preparação de receitas de comidas e bebidas.
+## 🏗️ Estrutura do Projeto
 
-## 🚀 Funcionalidades
+O projeto é composto por quatro entidades principais:
 
-- **Ver receitas** de comidas e bebidas.
-- **Buscar** receitas por nome ou categoria.
-- **Filtrar** receitas por nacionalidade e categoria.
-- **Favoritar** receitas.
-- **Acompanhar** o progresso de preparação de receitas.
+1. **Banco de Dados**:
+   - Container Docker MySQL configurado no `docker-compose.yml` como `db`.
+   - Acesso via Sequelize na porta 3306 do localhost.
 
-## 📚 Habilidades
+2. **Back-end**:
+   - Ambiente de desenvolvimento da API, rodando na porta 3001.
+   - Inicialização a partir de `app/backend/src/server.ts`.
 
-Neste projeto, você desenvolverá as seguintes habilidades:
+3. **Front-end**:
+   - Front-end já implementado, que consome a API.
+   - Comunicação com o back-end na URL `http://localhost:3001`.
 
-- Gerenciar estado utilizando **Redux** e **React-Redux**.
-- Usar a **Context API** do React.
-- Trabalhar com os Hooks `useState`, `useContext` e `useEffect`.
-- Criar **Hooks customizados**.
+4. **Docker**:
+   - `docker-compose.yml` para unificação dos serviços (backend, frontend e db).
+   - Inicialização do projeto com `npm run compose:up`.
 
-## ⚙️ APIs
+## 📊 Fluxos Principais
 
-### TheMealDB API
+O projeto é composto por quatro fluxos principais:
 
-Base de dados aberta com receitas e ingredientes de todo o mundo. Para fazer as requisições, utilize apenas o `fetch`.
+1. **Teams (Times)**: Gerenciamento de informações sobre os times de futebol.
+2. **Users e Login (Pessoas Usuárias e Credenciais de Acesso)**: Controle de autenticação e gerenciamento de usuários.
+3. **Matches (Partidas)**: Registro e consulta das partidas de futebol.
+4. **Leaderboards (Placares)**: Exibição e atualização das classificações dos times.
 
-- **Endereço da API:** [TheMealDB](https://www.themealdb.com/)
-- **Exemplo de resposta:**
+## ⚙️ Tecnologias Utilizadas
 
-```json
-{
-  "meals":[
-    {
-      "idMeal":"52882",
-      "strMeal":"Three Fish Pie",
-      // outros campos...
-    }
-  ]
-}
-```
+Este projeto foi desenvolvido utilizando as seguintes tecnologias:
 
-- **Endpoints úteis:**
-  - Listar categorias: `https://www.themealdb.com/api/json/v1/1/list.php?c=list`
-  - Listar nacionalidades: `https://www.themealdb.com/api/json/v1/1/list.php?a=list`
-  - Listar ingredientes: `https://www.themealdb.com/api/json/v1/1/list.php?i=list`
+- **Node.js**: Ambiente de execução JavaScript no servidor, que permite construir aplicações escaláveis.
+- **Express**: Framework web para Node.js que facilita a criação de APIs e servidores.
+- **Sequelize**: ORM (Object-Relational Mapping) para Node.js, utilizado para interagir com bancos de dados relacionais de forma mais intuitiva.
+- **JWT (JSON Web Token)**: Tecnologia de autenticação que permite a troca segura de informações entre partes.
+- **Mocha**: Framework de teste para JavaScript que permite executar testes de forma simples e flexível.
+- **Chai**: Biblioteca de asserções que pode ser utilizada com Mocha para realizar testes mais legíveis e expressivos.
+- **MySQL/PostgreSQL**: Banco de dados relacional utilizado para armazenar as informações da aplicação.
 
-### TheCockTailDB API
+Além disso, o projeto pode utilizar ferramentas de gerenciamento de pacotes, como:
 
-Semelhante à TheMealDB, focada em bebidas.
+- **npm**: Gerenciador de pacotes padrão para Node.js, utilizado para instalar e gerenciar dependências do projeto.
 
-- **Endereço da API:** [TheCockTailDB](https://www.thecocktaildb.com/)
-- **Exemplo de resposta:**
+Esta combinação de tecnologias permite desenvolver uma aplicação robusta, escalável e fácil de manter.
 
-```json
-{
-  "drinks":[
-    {
-      "idDrink":"17256",
-      "strDrink":"Martinez 2",
-      // outros campos...
-    }
-  ]
-}
-```
+## 🤝 Observações
 
-## ℹ️ Observações Técnicas
-
-### Rotas
-
-As rotas a serem utilizadas na aplicação são:
-
-- Tela de login: `/`
-- Tela principal de receitas de comidas: `/meals`
-- Tela principal de receitas de bebidas: `/drinks`
-- Tela de detalhes de uma receita de comida: `/meals/:id`
-- Tela de detalhes de uma receita de bebida: `/drinks/:id`
-- Tela de receita em progresso de comida: `/meals/:id/in-progress`
-- Tela de receita em progresso de bebida: `/drinks/:id/in-progress`
-- Tela de perfil: `/profile`
-- Tela de receitas feitas: `/done-recipes`
-- Tela de receitas favoritas: `/favorite-recipes`
-
-### LocalStorage
-
-O uso de `localStorage` é necessário para manter as informações ao atualizar a página. As chaves devem seguir as seguintes estruturas:
-
-- **Chave `user`:**
-```json
-{
-  "email": "email-da-pessoa"
-}
-```
-
-- **Chave `doneRecipes`:**
-```json
-[{
-  "id": "id-da-receita",
-  "type": "meal-ou-drink",
-  "nationality": "nacionalidade-da-receita-ou-texto-vazio",
-  "category": "categoria-da-receita-ou-texto-vazio",
-  "alcoholicOrNot": "alcoholic-ou-non-alcoholic-ou-texto-vazio",
-  "name": "nome-da-receita",
-  "image": "imagem-da-receita",
-  "doneDate": "quando-a-receita-foi-concluida",
-  "tags": []
-}]
-```
-
-- **Chave `favoriteRecipes`:**
-```json
-[{
-  "id": "id-da-receita",
-  "type": "meal-ou-drink",
-  "nationality": "nacionalidade-da-receita-ou-texto-vazio",
-  "category": "categoria-da-receita-ou-texto-vazio",
-  "alcoholicOrNot": "alcoholic-ou-non-alcoholic-ou-texto-vazio",
-  "name": "nome-da-receita",
-  "image": "imagem-da-receita"
-}]
-```
-
-- **Chave `inProgressRecipes`:**
-```json
-{
-  "drinks": {
-    "id-da-bebida": ["lista-de-ingredientes-utilizados"]
-  },
-  "meals": {
-    "id-da-comida": ["lista-de-ingredientes-utilizados"]
-  }
-}
-```
-
-## 🛠️ Tecnologias Utilizadas
-
-- React
-- Redux
-- Context API
-- Hooks (useState, useContext, useEffect)
-- Fetch API
-
-## 🤝 Contribuições
-
-Sinta-se à vontade para contribuir com melhorias! Abra um pull request ou entre em contato.
-
----
-
-Sinta-se à vontade para fazer ajustes ou adicionar mais informações conforme necessário!
+Projeto desenvolvido individualmente durante o curso de desenvolvedor fullstack na Trybe.
